@@ -1,26 +1,15 @@
 import sys
 
-if len(sys.argv) == 2:
-    INPUT = sys.argv[1]
-else:
-    print("Using default input")
-    INPUT = 'AABABBAB'
-
+INPUT = 'AABABBAB' if len(sys.argv) == 1 else sys.argv[1]
 print(f"Deliver {INPUT}")
 
-TIME = 0
 FACTORY = list(INPUT)
 A = []
 B = []
 PORT = []
 
-
-def work_done():
-    return len(A) + len(B) == len(INPUT)
-
-
 WORLD = {'FACTORY': FACTORY, 'PORT': PORT, 'A': A, 'B': B}
-MAP = {
+PLAN = {
     ('TRUCK', 'FACTORY', 'A'): ('PORT', 1),
     ('TRUCK', 'FACTORY', 'B'): ('B', 5),
     ('TRUCK', 'PORT', None): ('FACTORY', 1),
@@ -28,6 +17,7 @@ MAP = {
     ('SHIP', 'PORT', 'A'): ('A', 4),
     ('SHIP', 'A', None): ('PORT', 4),
 }
+TIME = 0
 
 
 class Transport:
@@ -54,8 +44,8 @@ class Transport:
 
         plan = (self.kind, self.loc, self.cargo)
 
-        if plan in MAP:
-            dest, eta = MAP[plan]
+        if plan in PLAN:
+            dest, eta = PLAN[plan]
             self.loc = dest
             self.eta = eta + TIME
         else:
@@ -65,13 +55,15 @@ class Transport:
 
 transport = [Transport('FACTORY', 'TRUCK'), Transport('FACTORY', 'TRUCK'), Transport('PORT', 'SHIP')]
 
-while True:
+
+def work_done():
+    return len(A) + len(B) == len(INPUT)
+
+
+while not work_done():
     print(TIME)
 
     for t in transport:
         t.move()
 
-    if work_done():
-        print("  DONE")
-        break
-    TIME += 1
+    TIME +=1
