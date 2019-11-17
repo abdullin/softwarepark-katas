@@ -45,8 +45,8 @@ class Transport:
         plan = (self.kind, self.loc, self.cargo)
 
         if plan in PLAN:
-            dest, eta = PLAN[plan]
-            self.loc = dest
+            destination, eta = PLAN[plan]
+            self.loc = destination
             self.eta = eta + TIME
         else:
             # print(f'{self.kind} has no plan for {plan}')
@@ -56,11 +56,11 @@ class Transport:
 transport = [Transport('FACTORY', 'TRUCK'), Transport('FACTORY', 'TRUCK'), Transport('PORT', 'SHIP')]
 
 
-def work_done():
+def cargo_delivered():
     return len(A) + len(B) == len(INPUT)
 
 
-while not work_done():
+while not cargo_delivered():
     print(TIME)
 
     for t in transport:

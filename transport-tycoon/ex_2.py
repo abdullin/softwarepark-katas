@@ -1,35 +1,26 @@
+import json
 import sys
 from dataclasses import dataclass
 
-if len(sys.argv) == 2:
-    INPUT = sys.argv[1]
-else:
-    print("Using default input")
-    INPUT = 'AABABBAB'
-
-print(f"Deliver {INPUT}")
+INPUT = 'AABABBAB' if len(sys.argv) == 1 else sys.argv[1]
+print(f"# Deliver {INPUT}")
 
 
 @dataclass
 class Cargo:
-    id:int
-    dest: str
-
+    cargo_id: int
+    destination: str
+    origin: str
 
 
 TIME = 0
-FACTORY = [Cargo(i, x) for i,x in enumerate(INPUT)]
+FACTORY = [Cargo(i, x, 'FACTORY') for i, x in enumerate(INPUT)]
 A = []
 B = []
 PORT = []
 
-
-def work_done():
-    return len(A) + len(B) == len(INPUT)
-
-
 WORLD = {'FACTORY': FACTORY, 'PORT': PORT, 'A': A, 'B': B}
-MAP = {
+PLAN = {
     ('TRUCK', 'FACTORY', 'A'): ('PORT', 1),
     ('TRUCK', 'FACTORY', 'B'): ('B', 5),
     ('TRUCK', 'PORT', None): ('FACTORY', 1),
@@ -39,54 +30,59 @@ MAP = {
 }
 
 
-
 class Transport:
-    def __init__(self, loc, kind):
+    def __init__(self, id, loc, kind):
+        self.id = id
         self.loc = loc
         self.kind = kind
         self.eta = 0
         self.cargo = None
 
+    def log(self, e, **kwargs):
+        if self.cargo:
+            kwargs['cargo'] = [self.cargo.__dict__]
+        e = {'event': e, 'time': TIME, 'transport_id': self.id, 'kind': self.kind, 'location': self.loc, **kwargs}
+        print(json.dumps(e))
+
     def move(self):
+        if TIME and self.eta == TIME:
+            self.log('ARRIVE')
         if self.eta > TIME:
-            # print(f"{self.kind} arrives to {self.loc} in {self.eta-TIME}")
             return
 
         place = WORLD[self.loc]
-
-        dest = None
+        destination = None
         if self.cargo:
             place.append(self.cargo)
-            print(f'  {self.kind} drops {self.cargo} at {self.loc}')
+            self.log('UNLOAD')
             self.cargo = None
         else:
             if place:
                 self.cargo = place.pop(0)
-                dest = self.cargo.dest
-                print(f'  {self.kind} picks {self.cargo} at {self.loc}')
+                destination = self.cargo.destination
+                self.log('LOAD')
 
-        plan = (self.kind, self.loc, dest)
+        plan = (self.kind, self.loc, destination)
 
-        if plan in MAP:
-            dest, eta = MAP[plan]
-            self.loc = dest
+        if plan in PLAN:
+            destination, eta = PLAN[plan]
+            self.log('DEPART', destination=destination)
+            self.loc = destination
             self.eta = eta + TIME
         else:
             # print(f'{self.kind} has no plan for {plan}')
             pass
 
 
-transport = [Transport('FACTORY', 'TRUCK'), Transport('FACTORY', 'TRUCK'), Transport('PORT', 'SHIP')]
+transport = [Transport(2, 'PORT', 'SHIP'), Transport(0, 'FACTORY', 'TRUCK'), Transport(1, 'FACTORY', 'TRUCK'), ]
 
-while True:
-    print(TIME)
 
+def cargo_delivered():
+    return len(A) + len(B) == len(INPUT)
+
+
+while not cargo_delivered():
     for t in transport:
         t.move()
 
-    if work_done():
-        print("  DONE")
-        break
-    TIME += 1
-
-""""""
+    TIME +=1
