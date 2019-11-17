@@ -1,0 +1,16 @@
+[
+    { "args" :
+      {
+        "snapshot": {
+        "cargo": "A"
+          }
+      },
+      "cat" : "cc",
+      "id" : "0x79418600",
+      "name" : "cc::Picture::Raster",
+      "ph" : "O",
+      "pid" : 61248,
+      "tid" : 1799,
+      "ts" : 1293319602204
+    }
+]

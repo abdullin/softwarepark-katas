@@ -1,0 +1,80 @@
+{
+  "traceEvents": [
+    {
+      "cat": "ipc",
+      "pid": "Truck-1",
+      "tid": "Truck-1",
+      "ts": 0,
+      "ph": "X",
+      "name": "Factory-Port",
+      "dur": 1000
+    },
+    {
+      "cat": "ipc",
+      "pid": "Truck-1",
+      "tid": "Truck-1",
+      "ts": 0,
+      "ph": "s",
+      "name": "CARGO-A1",
+      "id":"CARGO-A1"
+    },
+        {
+      "cat": "ipc",
+      "pid": "Truck-1",
+      "tid": "Truck-1",
+      "ts": 1000,
+      "ph": "X",
+      "name": "Port-Factory",
+      "dur": 1000
+    },
+
+   {
+      "cat": "ipc",
+      "pid": "Ship-2",
+      "tid": "Ship-2",
+      "ts": 0,
+      "ph": "X",
+      "name": "B-Port",
+      "dur": 1000
+    },
+
+
+    {
+      "cat": "ipc",
+      "pid": "Ship-2",
+      "tid": "Ship-2",
+      "ts": 1000,
+      "ph": "X",
+      "name": "Port-B",
+      "dur": 1000
+    },
+    {
+      "cat": "ipc",
+      "pid": "Ship-2",
+      "tid": "Ship-2",
+      "ts": 1000,
+      "ph": "t",
+      "name": "CARGO-A1",
+      "id": "CARGO-A1"
+    },
+
+    {
+      "cat": "ipc",
+      "pid": "Ship-1",
+      "tid": "Ship-1",
+      "ts": 2000,
+      "ph": "f",
+      "name": "CARGO-A1",
+      "id": "CARGO-A1"
+    },
+    {
+      "cat": "ipc",
+      "pid": "Ship-1",
+      "tid": "Ship-1",
+      "ts": 2000,
+      "ph": "X",
+      "name": "B-C",
+      "dur": 1000
+    }
+  ]
+}
