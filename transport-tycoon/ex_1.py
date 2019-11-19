@@ -49,7 +49,7 @@ class Transport:
             self.loc = destination
             self.eta = eta + TIME
         else:
-            # print(f'{self.kind} has no plan for {plan}')
+            # print(f'{self.kind} has no schedule for {schedule}')
             pass
 
 
