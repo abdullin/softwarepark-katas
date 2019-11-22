@@ -7,7 +7,6 @@ from typing import List
 FUTURE = defaultdict(list)
 TIME = 0
 INPUT = 'AABABBAB' if len(sys.argv) == 1 else sys.argv[1]
-print(f"# Deliver {INPUT}")
 
 
 @dataclass
@@ -29,13 +28,7 @@ class Loc:
 
 
 FACTORY = Loc("FACTORY", [Cargo(i, x, 'FACTORY') for i, x in enumerate(INPUT)])
-A = Loc("A", [])
-B = Loc("B", [])
-PORT = Loc("PORT", [])
-
-
-def cargo_delivered():
-    return len(A.cargo) + len(B.cargo) == len(INPUT)
+A, B, PORT = Loc("A", []), Loc("B", []), Loc("PORT", [])
 
 
 class Transport:
@@ -53,19 +46,19 @@ class Transport:
     def travel(self, destination: Loc, eta: int):
         self.log("DEPART", destination=destination.id)
         self.loc = None
-        yield eta
+        yield eta, 'arrive'
         self.loc = destination
         self.log("ARRIVE")
 
     def deliver_cargo(self, destination: Loc, eta, cargo: List[Cargo], load_time: int):
         self.cargo = cargo
         self.log("LOAD")
-        yield load_time
+        yield load_time, 'load'
 
         for x in self.travel(destination, eta):
             yield x
 
-        yield load_time
+        yield load_time, 'unload'
         self.log("UNLOAD")
         self.loc.cargo.extend(self.cargo)
         self.cargo = []
@@ -76,7 +69,8 @@ class Transport:
     def run(self):
         while True:
             while not self.home.cargo:
-                yield 1  # wait for the cargo
+                yield 1, 'wait'  # wait for the cargo
+            yield 0, 'wait'  # let the others finish deliveries
 
             if self.home == PORT:
                 plan = self.deliver_cargo(A, 6, self.home.get_cargo(4), 1)
@@ -90,12 +84,17 @@ class Transport:
                 yield p
 
 
-for t in [Transport('TRUCK1', FACTORY), Transport('TRUCK2', FACTORY), Transport('FERRY', PORT)]:
-    FUTURE[0].append(t.run())  # start all transports right now
+PRIORITY = {'arrive': 0, 'unload': 1, 'load': 10, 'wait': 10}
 
-while not cargo_delivered():
-    while FUTURE[TIME]:                         # while the current time has scheduled actors
-        actor = FUTURE[TIME].pop(0)             # get the next actor scheduled to run now
-        interval = next(actor)                  # execute actor till it yields
-        FUTURE[TIME + interval].append(actor)   # send actor into the future as it asked
+for t in [Transport('TRUCK1', FACTORY), Transport('TRUCK2', FACTORY), Transport('SHIP', PORT)]:
+    FUTURE[0].append((t.run(), 'wait'))  # start all transports right now
+
+while len(A.cargo) + len(B.cargo) < len(INPUT):             # while cargo not delivered
+    while FUTURE[TIME]:                                     # while the current time has scheduled actors
+        FUTURE[TIME].sort(key=lambda x: PRIORITY[x[1]])     # sort actions according to the priority
+        actor, _ = FUTURE[TIME].pop(0)                      # get the next actor scheduled to run now
+        interval, priority = next(actor)                    # execute actor till it yields
+        FUTURE[TIME + interval].append((actor, priority))   # send actor into the future as it asked
     TIME += 1
+
+print(f"# Deliver {INPUT} in {TIME-1}")

@@ -55,4 +55,6 @@ with open(input_file, 'rt') as log:
             events.append(headers)
 
 
+
+
     print(json.dumps({"displayTimeUnit": "ms", 'traceEvents': events, }, indent=True))
