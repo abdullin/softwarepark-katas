@@ -52,14 +52,14 @@ class Transport:
 
     def deliver_cargo(self, destination: Loc, eta, cargo: List[Cargo], load_time: int):
         self.cargo = cargo
-        self.log("LOAD")
+        self.log("LOAD", duration=load_time)
         yield load_time, 'load'
 
         for x in self.travel(destination, eta):
             yield x
 
+        self.log("UNLOAD", duration=load_time)
         yield load_time, 'unload'
-        self.log("UNLOAD")
         self.loc.cargo.extend(self.cargo)
         self.cargo = []
 
