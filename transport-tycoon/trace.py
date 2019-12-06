@@ -54,6 +54,9 @@ with open(input_file, 'rt') as log:
 
             events.append(headers)
         if kind == 'LOAD' or kind == 'UNLOAD':
+            if not e['duration']:
+                continue
+
             headers = extract_common_headers(e)
             headers.update({'ph': 'X', 'dur':e['duration'], 'name':kind})
             events.append(headers)
