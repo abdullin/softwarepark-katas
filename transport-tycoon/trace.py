@@ -41,25 +41,29 @@ with open(input_file, 'rt') as log:
         if not l or l.startswith('#'):
             continue
 
-        e = json.loads(l)
-        kind = e['event']
-        if kind == 'DEPART':
-            headers = extract_common_headers(e)
-            headers.update({'ph': 'B', 'name': "{0}-{1}".format(e['location'], e['destination']), })
-            events.append(headers)
+        try:
 
-        if kind == 'ARRIVE':
-            headers = extract_common_headers(e)
-            headers.update({ 'ph': 'E'})
+            e = json.loads(l)
+            kind = e['event']
+            if kind == 'DEPART':
+                headers = extract_common_headers(e)
+                headers.update({'ph': 'B', 'name': "{0}-{1}".format(e['location'], e['destination']), })
+                events.append(headers)
 
-            events.append(headers)
-        if kind == 'LOAD' or kind == 'UNLOAD':
-            if not e['duration']:
-                continue
+            if kind == 'ARRIVE':
+                headers = extract_common_headers(e)
+                headers.update({ 'ph': 'E'})
 
-            headers = extract_common_headers(e)
-            headers.update({'ph': 'X', 'dur':e['duration'], 'name':kind})
-            events.append(headers)
+                events.append(headers)
+            if kind == 'LOAD' or kind == 'UNLOAD':
+                if not e['duration']:
+                    continue
+
+                headers = extract_common_headers(e)
+                headers.update({'ph': 'X', 'dur':e['duration'], 'name':kind})
+                events.append(headers)
+        except Exception as e:
+            raise ValueError(l) from e
 
 
 

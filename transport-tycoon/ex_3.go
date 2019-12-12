@@ -41,10 +41,15 @@ func (f Future) Schedule(time int, c ...Cell) {
 	}
 }
 
-type Actor chan Op
+
+
+
+type Actor interface {
+	Execute() Op
+}
 type Op struct {
-	int
-	string
+	duration int
+	kind string
 }
 type Cell struct {
 	Actor
@@ -52,7 +57,7 @@ type Cell struct {
 }
 
 type Cargo struct {
-	Id          int `json:"id"`
+	Id          int `json:"cargo_id"`
 	Destination string `json:"destination"`
 	Origin      string `json:"origin"`
 }
@@ -68,9 +73,9 @@ type Event struct {
 	Event string `json:"event"`
 	Time int `json:"time"`
 	Location string `json:"location"`
-	Cargo []Cargo `json:"cargo"`
+	Cargo []Cargo `json:"cargo,omitempty"`
 	Duration int `json:"duration"`
-	Destination string `json:"destination"`
+	Destination string `json:"destination,omitempty"`
 }
 
 func (l Loc) getCargo(count int) []Cargo {
@@ -91,7 +96,7 @@ type Transport struct {
 	loc   *Loc
 	home  *Loc
 	cargo []Cargo
-	wait  Actor
+	unlock  chan Op
 }
 
 func (t *Transport) log(e *Event) {
@@ -103,9 +108,19 @@ func (t *Transport) log(e *Event) {
 	if data, err := json.Marshal(e); err == nil {
 		fmt.Println(string(data))
 	}
+}
+
+func (t *Transport) Execute() Op{
+
+	op := <- t.unlock
+	return op
+
+}
+
+func (t *Transport) sleep(duration int, priority string){
 
 
-
+	t.unlock <- Op{duration, priority}
 }
 
 func (t *Transport) travel(dest *Loc, eta int) {
@@ -171,15 +186,16 @@ func main() {
 		wait := make(chan Op)
 		t.wait = wait
 		t.loc = t.home
-		future.Schedule(0, Cell{t.wait, "wait"})
+		future.Schedule(0, Cell{t, "wait"})
 		go t.run()
 	}
 
 	for len(A.cargo)+len(B.cargo) < len(input) {
 		for {
 			if a, found := future.GetNext(TIME); found {
-				op := <-a // unblock and take next
-				future.Schedule(TIME+op.int, Cell{a, op.string})
+				op := a.Execute() // unblock and take next
+				fmt.Println("Schedule in ", op.duration)
+				future.Schedule(TIME+op.duration, Cell{a, op.kind})
 			} else {
 				break
 			}
