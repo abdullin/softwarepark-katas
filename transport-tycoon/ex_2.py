@@ -27,8 +27,8 @@ class Loc:
         return load
 
 
-FACTORY = Loc("FACTORY", [Cargo(i, x, 'FACTORY') for i, x in enumerate(INPUT)])
-A, B, PORT = Loc("A", []), Loc("B", []), Loc("PORT", [])
+CARGO = [Cargo(i, x, 'FACTORY') for i, x in enumerate(INPUT)]
+A, B, PORT, FACTORY = Loc("A", []), Loc("B", []), Loc("PORT", []), Loc("FACTORY", CARGO)
 
 
 class Transport:
