@@ -55,16 +55,14 @@ class Transport:
         self.log("LOAD", duration=load_time)
         yield load_time, 'load'
 
-        for x in self.travel(destination, eta):
-            yield x
+        yield from self.travel(destination, eta)
 
         self.log("UNLOAD", duration=load_time)
         yield load_time, 'unload'
         self.loc.cargo.extend(self.cargo)
         self.cargo = []
 
-        for x in self.travel(self.home, eta):
-            yield x
+        yield from self.travel(self.home, eta)
 
     def run(self):
         while True:
@@ -80,14 +78,13 @@ class Transport:
                     plan = self.deliver_cargo(PORT, 1, cargo, 0)
                 else:
                     plan = self.deliver_cargo(B, 5, cargo, 0)
-            for p in plan:
-                yield p
+            yield from plan
 
 
 PRIORITY = {'arrive': 0, 'unload': 1, 'load': 10, 'wait': 10}
 
 for t in [Transport('TRUCK1', FACTORY), Transport('TRUCK2', FACTORY), Transport('SHIP', PORT)]:
-    FUTURE[0].append((t.run(), 'wait'))  # start all transports right now
+    FUTURE[0].append((t.run(), 'wait'))                     # start all transports right now
 
 while len(A.cargo) + len(B.cargo) < len(INPUT):             # while cargo not delivered
     while FUTURE[TIME]:                                     # while the current time has scheduled actors
