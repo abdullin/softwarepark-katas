@@ -71,14 +71,13 @@ class Transport:
             yield 0, 'wait'  # let the others finish deliveries
 
             if self.home == PORT:
-                plan = self.deliver_cargo(A, 6, self.home.get_cargo(4), 1)
+                yield from self.deliver_cargo(A, 6, self.home.get_cargo(4), 1)
             else:
                 cargo = self.loc.get_cargo(1)
                 if cargo[0].destination == A.id:
-                    plan = self.deliver_cargo(PORT, 1, cargo, 0)
+                    yield from self.deliver_cargo(PORT, 1, cargo, 0)
                 else:
-                    plan = self.deliver_cargo(B, 5, cargo, 0)
-            yield from plan
+                    yield from self.deliver_cargo(B, 5, cargo, 0)
 
 
 PRIORITY = {'arrive': 0, 'unload': 1, 'load': 10, 'wait': 10}
