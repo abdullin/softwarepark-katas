@@ -50,7 +50,7 @@ class Transport:
         self.loc = destination
         self.log("ARRIVE")
 
-    def deliver_cargo(self, destination: Loc, eta, cargo: List[Cargo], load_time: int):
+    def deliver(self, destination: Loc, eta, cargo: List[Cargo], load_time: int):
         self.cargo = cargo
         self.log("LOAD", duration=load_time)
         yield load_time, 'load'
@@ -71,13 +71,13 @@ class Transport:
             yield 0, 'wait'  # let the others finish deliveries
 
             if self.home == PORT:
-                yield from self.deliver_cargo(A, 6, self.home.get_cargo(4), 1)
+                yield from self.deliver(A, 6, self.home.get_cargo(4), 1)
             else:
                 cargo = self.loc.get_cargo(1)
                 if cargo[0].destination == A.id:
-                    yield from self.deliver_cargo(PORT, 1, cargo, 0)
+                    yield from self.deliver(PORT, 1, cargo, 0)
                 else:
-                    yield from self.deliver_cargo(B, 5, cargo, 0)
+                    yield from self.deliver(B, 5, cargo, 0)
 
 
 PRIORITY = {'arrive': 0, 'unload': 1, 'load': 10, 'wait': 10}
