@@ -76,11 +76,8 @@ func (l *Loc) getCargo(count int) []Cargo {
 	if avail > count {
 		avail = count
 	}
-
 	take := l.cargo[:avail]
 	l.cargo = l.cargo[avail:]
-
-	fmt.Println("# left ", len(l.cargo))
 	return take
 }
 
@@ -97,8 +94,7 @@ type Transport struct {
 	home     *Loc
 	cargo    []Cargo
 	messages chan Op
-
-	window chan bool
+	activate chan bool
 }
 
 func (t *Transport) log(e *Event) {
@@ -114,12 +110,12 @@ func (t *Transport) log(e *Event) {
 
 func (t *Transport) wait(duration int, priority string) {
 	t.messages <- Op{duration: duration, kind: priority}
-	<-t.window
+	<-t.activate
 }
 
 func (t *Transport) Step() Op {
 	// tell that it can run
-	t.window <- true
+	t.activate <- true
 	// wait for the response
 	return <-t.messages
 }
@@ -148,7 +144,7 @@ func (t *Transport) deliver(dest *Loc, eta int, c []Cargo, load_time int) {
 }
 
 func (t *Transport) run() {
-	<-t.window
+	<-t.activate
 
 	for {
 		for len(t.home.cargo) == 0 {
@@ -175,17 +171,16 @@ func main() {
 		input = os.Args[1]
 	}
 
-	future := make(Future)
-
 	for i, c := range input {
 		FACTORY.cargo = append(FACTORY.cargo, Cargo{i, string(c), "FACTORY"})
 	}
 
 	ts := []*Transport{{id: "TRUCK1", home: FACTORY}, {id: "TRUCK2", home: FACTORY}, {id: "FERRY", home: PORT}}
 
+	future := make(Future)
 	for _, t := range ts {
 		t.messages = make(chan Op)
-		t.window = make(chan bool)
+		t.activate = make(chan bool)
 		t.loc = t.home
 		future.Schedule(0, Cell{t, "wait"})
 
@@ -206,4 +201,5 @@ func main() {
 
 		TIME += 1
 	}
+	fmt.Printf("# Deliver %s in %d\n", input, TIME-1)
 }
