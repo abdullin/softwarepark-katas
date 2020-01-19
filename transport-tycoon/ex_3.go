@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"runtime"
 	"sort"
 )
 
@@ -45,7 +44,7 @@ func (f Future) Schedule(time int, c ...Cell) {
 
 
 type Actor interface {
-	Execute() Op
+	Step() Op
 }
 type Op struct {
 	duration int
@@ -78,9 +77,19 @@ type Event struct {
 	Destination string `json:"destination,omitempty"`
 }
 
-func (l Loc) getCargo(count int) []Cargo {
-	take := l.cargo[:4]
-	l.cargo = l.cargo[4:]
+func (l *Loc) getCargo(count int) []Cargo {
+	avail := len(l.cargo)
+	if avail > count {
+		avail= count
+	}
+
+
+
+
+	take := l.cargo[:avail]
+	l.cargo = l.cargo[avail:]
+
+	fmt.Println("# left ", len(l.cargo))
 	return take
 }
 
@@ -92,11 +101,15 @@ var (
 )
 
 type Transport struct {
-	id    string
-	loc   *Loc
-	home  *Loc
-	cargo []Cargo
-	unlock  chan Op
+	id       string
+	loc      *Loc
+	home     *Loc
+	cargo    []Cargo
+	messages chan Op
+
+	window chan bool
+
+
 }
 
 func (t *Transport) log(e *Event) {
@@ -110,23 +123,23 @@ func (t *Transport) log(e *Event) {
 	}
 }
 
-func (t *Transport) Execute() Op{
-
-	op := <- t.unlock
-	return op
-
+func (t *Transport) wait(duration int, priority string){
+	t.messages <- Op{duration:duration, kind:priority}
+	<- t.window
 }
 
-func (t *Transport) sleep(duration int, priority string){
-
-
-	t.unlock <- Op{duration, priority}
+func (t *Transport) Step() Op{
+	// tell that it can run
+	t.window <- true
+	// wait for the response
+	return <- t.messages
 }
+
 
 func (t *Transport) travel(dest *Loc, eta int) {
 	t.log(&Event{Event:"DEPART", Destination:dest.id})
 	t.loc = nil
-	t.wait <- Op{eta, "arrive"}
+	t.wait(eta, "arrive")
 	t.loc = dest
 	t.log(&Event{Event:"ARRIVE"})
 }
@@ -134,11 +147,11 @@ func (t *Transport) travel(dest *Loc, eta int) {
 func (t *Transport) deliver(dest *Loc, eta int, c []Cargo, load_time int) {
 	t.cargo = c
 	t.log(&Event{Event:"LOAD", Duration:load_time})
-	t.wait <- Op{load_time, "load"}
+	t.wait(load_time, "load")
 
 	t.travel(dest, eta)
 	t.log(&Event{Event:"UNLOAD", Duration:load_time})
-	t.wait <- Op{load_time, "load"}
+	t.wait(load_time, "load")
 
 	dest.cargo = append(dest.cargo, c...)
 	t.cargo = nil
@@ -147,11 +160,16 @@ func (t *Transport) deliver(dest *Loc, eta int, c []Cargo, load_time int) {
 }
 
 func (t *Transport) run() {
+
+	<- t.window
+
+	// fmt.Println("Starting run")
+
 	for {
 		for len(t.home.cargo) == 0 {
-			t.wait <- Op{1, "wait"}
+			t.wait(1, "wait")
 		}
-		t.wait <- Op{0, "wait"}
+		t.wait(0, "wait")
 
 		if t.home == PORT {
 			t.deliver(A, 6, t.home.getCargo(4), 1)
@@ -167,8 +185,6 @@ func (t *Transport) run() {
 }
 
 func main() {
-	runtime.GOMAXPROCS(1)
-
 	input := "AABABBAB"
 	if len(os.Args) == 2 {
 		input = os.Args[1]
@@ -183,18 +199,21 @@ func main() {
 	ts := []*Transport{{id: "TRUCK1", home: FACTORY}, {id: "TRUCK2", home: FACTORY}, {id: "FERRY", home: PORT}}
 
 	for _, t := range ts {
-		wait := make(chan Op)
-		t.wait = wait
+		t.messages = make(chan Op)
+		t.window = make(chan bool)
 		t.loc = t.home
 		future.Schedule(0, Cell{t, "wait"})
+
 		go t.run()
 	}
+
 
 	for len(A.cargo)+len(B.cargo) < len(input) {
 		for {
 			if a, found := future.GetNext(TIME); found {
-				op := a.Execute() // unblock and take next
-				fmt.Println("Schedule in ", op.duration)
+
+				op := a.Step() // unblock and take next
+				// fmt.Println("Schedule in ", op.duration)
 				future.Schedule(TIME+op.duration, Cell{a, op.kind})
 			} else {
 				break
