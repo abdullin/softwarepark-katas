@@ -20,12 +20,12 @@ func Priority(op string) int {
 
 type Future map[int][]Cell
 
-func (f Future) GetNext(time int) (a Actor, found bool) {
+func (f Future) GetNext(time int) (a *Transport, found bool) {
 	if arr, found := f[time]; found && len(arr) > 0 {
 		sort.SliceStable(arr, func(i, j int) bool {
 			return Priority(arr[i].string) < Priority(arr[j].string)
 		})
-		a = arr[0].Actor
+		a = arr[0].Transport
 		f[time] = arr[1:]
 		return a, true
 	}
@@ -40,23 +40,17 @@ func (f Future) Schedule(time int, c ...Cell) {
 	}
 }
 
-
-
-
-type Actor interface {
-	Step() Op
-}
 type Op struct {
 	duration int
-	kind string
+	kind     string
 }
 type Cell struct {
-	Actor
+	*Transport
 	string
 }
 
 type Cargo struct {
-	Id          int `json:"cargo_id"`
+	Id          int    `json:"cargo_id"`
 	Destination string `json:"destination"`
 	Origin      string `json:"origin"`
 }
@@ -67,24 +61,21 @@ type Loc struct {
 }
 
 type Event struct {
-	TransportId string `json:"transport_id"`
-	Kind string `json:"kind"`
-	Event string `json:"event"`
-	Time int `json:"time"`
-	Location string `json:"location"`
-	Cargo []Cargo `json:"cargo,omitempty"`
-	Duration int `json:"duration"`
-	Destination string `json:"destination,omitempty"`
+	TransportId string  `json:"transport_id"`
+	Kind        string  `json:"kind"`
+	Event       string  `json:"event"`
+	Time        int     `json:"time"`
+	Location    string  `json:"location"`
+	Cargo       []Cargo `json:"cargo,omitempty"`
+	Duration    int     `json:"duration"`
+	Destination string  `json:"destination,omitempty"`
 }
 
 func (l *Loc) getCargo(count int) []Cargo {
 	avail := len(l.cargo)
 	if avail > count {
-		avail= count
+		avail = count
 	}
-
-
-
 
 	take := l.cargo[:avail]
 	l.cargo = l.cargo[avail:]
@@ -108,8 +99,6 @@ type Transport struct {
 	messages chan Op
 
 	window chan bool
-
-
 }
 
 func (t *Transport) log(e *Event) {
@@ -117,40 +106,39 @@ func (t *Transport) log(e *Event) {
 	e.Time = TIME
 	e.Kind = t.id[:5]
 	e.Location = t.loc.id
-	e.Cargo=t.cargo
+	e.Cargo = t.cargo
 	if data, err := json.Marshal(e); err == nil {
 		fmt.Println(string(data))
 	}
 }
 
-func (t *Transport) wait(duration int, priority string){
-	t.messages <- Op{duration:duration, kind:priority}
-	<- t.window
+func (t *Transport) wait(duration int, priority string) {
+	t.messages <- Op{duration: duration, kind: priority}
+	<-t.window
 }
 
-func (t *Transport) Step() Op{
+func (t *Transport) Step() Op {
 	// tell that it can run
 	t.window <- true
 	// wait for the response
-	return <- t.messages
+	return <-t.messages
 }
 
-
 func (t *Transport) travel(dest *Loc, eta int) {
-	t.log(&Event{Event:"DEPART", Destination:dest.id})
+	t.log(&Event{Event: "DEPART", Destination: dest.id})
 	t.loc = nil
 	t.wait(eta, "arrive")
 	t.loc = dest
-	t.log(&Event{Event:"ARRIVE"})
+	t.log(&Event{Event: "ARRIVE"})
 }
 
 func (t *Transport) deliver(dest *Loc, eta int, c []Cargo, load_time int) {
 	t.cargo = c
-	t.log(&Event{Event:"LOAD", Duration:load_time})
+	t.log(&Event{Event: "LOAD", Duration: load_time})
 	t.wait(load_time, "load")
 
 	t.travel(dest, eta)
-	t.log(&Event{Event:"UNLOAD", Duration:load_time})
+	t.log(&Event{Event: "UNLOAD", Duration: load_time})
 	t.wait(load_time, "load")
 
 	dest.cargo = append(dest.cargo, c...)
@@ -160,10 +148,7 @@ func (t *Transport) deliver(dest *Loc, eta int, c []Cargo, load_time int) {
 }
 
 func (t *Transport) run() {
-
-	<- t.window
-
-	// fmt.Println("Starting run")
+	<-t.window
 
 	for {
 		for len(t.home.cargo) == 0 {
@@ -207,7 +192,6 @@ func main() {
 		go t.run()
 	}
 
-
 	for len(A.cargo)+len(B.cargo) < len(input) {
 		for {
 			if a, found := future.GetNext(TIME); found {
@@ -221,7 +205,5 @@ func main() {
 		}
 
 		TIME += 1
-
 	}
-
 }
