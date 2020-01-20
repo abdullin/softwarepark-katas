@@ -1,3 +1,5 @@
+// Solving DDD kata#3
+// https://github.com/Softwarepark/exercises/blob/master/transport-tycoon-3.md
 package main
 
 import (
@@ -81,8 +83,6 @@ func (l *Loc) getCargo(count int) []Cargo {
 	return take
 }
 
-var TIME = 0
-
 var (
 	FACTORY    = &Loc{id: "FACTORY"}
 	A, B, PORT = &Loc{id: "A"}, &Loc{id: "B"}, &Loc{id: "PORT"}
@@ -96,6 +96,8 @@ type Transport struct {
 	messages chan Op
 	activate chan bool
 }
+
+var TIME = 0
 
 func (t *Transport) log(e *Event) {
 	e.TransportId = t.id
@@ -179,20 +181,16 @@ func main() {
 
 	future := make(Future)
 	for _, t := range ts {
-		t.messages = make(chan Op)
-		t.activate = make(chan bool)
+		t.messages, t.activate = make(chan Op), make(chan bool)
 		t.loc = t.home
 		future.Schedule(0, Cell{t, "wait"})
-
 		go t.run()
 	}
 
 	for len(A.cargo)+len(B.cargo) < len(input) {
 		for {
 			if a, found := future.GetNext(TIME); found {
-
 				op := a.Step() // unblock and take next
-				// fmt.Println("Schedule in ", op.duration)
 				future.Schedule(TIME+op.duration, Cell{a, op.kind})
 			} else {
 				break
