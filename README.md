@@ -1,2 +1,4 @@
 # softwarepark-ddd
-Solving SoftwarePark DDD
+Solving [SoftwarePark DDD katas](https://github.com/Softwarepark/exercises)
+
+
