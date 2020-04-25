@@ -2,7 +2,6 @@ import json
 from collections import defaultdict
 from typing import Dict
 
-
 class Truck:
     pass
 
@@ -27,7 +26,6 @@ class Link:
             return f'ROAD({self.distance})'
         return f'FERRY({self.distance})'
 
-
 class Transport:
     def __init__(self, type:int, uid: int):
         self.type = type
@@ -45,13 +43,10 @@ class Location:
         self.transports = []
         self.cargo = []
 
-
     def __repr__(self):
         return f'Location({self.transports}, {self.cargo}, {self.link})'
 
-
 WORLD = {}
-
 
 ROAD = 'TRUCK'
 FERRY = 'FERRY'
@@ -111,9 +106,6 @@ def map_to_json():
 
         transports = [{'uid':x.uid, 'type':x.type} for x in loc.transports]
 
-
-
-
         links = []
 
         for l, prop in loc.link.items():
@@ -127,14 +119,9 @@ def map_to_json():
             'links':links,
             'cargo': cargo,
             'transports': transports,
-
         })
 
     return map
-
-
-
-
 
 print(navs)
 
