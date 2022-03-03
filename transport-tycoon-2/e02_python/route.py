@@ -21,11 +21,16 @@ from queue import PriorityQueue as PQ
 from collections import defaultdict
 
 
+# read CLI arguments
+_, start, end = sys.argv
+
 # this is our map
 # key is the current location
 # value is a list of (location, Time-to-travel)
 MAP = defaultdict(list)  # port to roads
 
+# Let's parse and load the map. We could shave a few LOC by using pandas
+# but that wouldn't be much fun
 with open("s02e02_map.csv") as f:
     lines = f.readlines()
     for line in lines[1:]:
@@ -34,9 +39,9 @@ with open("s02e02_map.csv") as f:
         MAP[loc_a].append((loc_b, time_to_travel))
         MAP[loc_b].append((loc_a, time_to_travel))
 
-_, start, end = sys.argv
-
+# list of our visited locations
 visited = []
+
 # priority queue to track how our truck travels through the milestones
 # it will have tuples that contain travel history as a linked list: (CLOCK, location, Parent)
 # E.g. travel history with just one milestone where truck started in city 'CITY1' will be (0, "CITY1", None)
@@ -48,8 +53,10 @@ visited = []
 # priority queue sorts by the first tuple element, so any running travels will be properly ordered.
 # we can represent multuple travels while reusing objects from the previous travels.
 # just add new miletstones and link them to the existing travel graph.
-
 travels = PQ()
+
+# this is our start location
+# travel tree will grow from here
 travels.put((0, start, None))
 
 while not travels.empty():
@@ -70,9 +77,11 @@ while not travels.empty():
         break
 
     visited.append(location)
-
+    # we got work to do. Let's look through all roads that
+    # lead to unvisited locations.
     for destination, time_to_travel in MAP[location]:
         if destination not in visited:
             # this destination wasn't explored, let's check it out
+            # by sending a truck there
             arrival_time = clock + time_to_travel
             travels.put((arrival_time, destination, trip))
