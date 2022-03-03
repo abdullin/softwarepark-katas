@@ -22,7 +22,7 @@ with open("s02e02_map.csv") as f:
     lines = f.readlines()
     for line in lines[1:]:
         loc_a, loc_b, km, speed = line.split(",")
-        time_to_travel = float(km)/int(speed)
+        time_to_travel = float(km) / int(speed)
         MAP[loc_a].append((loc_b, time_to_travel))
         MAP[loc_b].append((loc_a, time_to_travel))
 
