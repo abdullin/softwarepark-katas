@@ -2,8 +2,16 @@
 """
 Usage: route.py FROM TO
 
-This implements Trustbit Transport Kata Episode 2.1 - Find shortest path on map
-https://github.com/Softwarepark/exercises/blob/master/transport-tycoon_21.md
+For example:
+
+./route.py Steamdrift Leverstorm
+ 0.00h DEPART Steamdrift
+14.26h ARRIVE Cogburg
+24.81h ARRIVE Irondale
+31.88h ARRIVE Leverstorm
+
+This implements Trustbit Transport Kata Episode 2.2
+https://github.com/Softwarepark/exercises/blob/master/transport-tycoon_22.md
 
 The file is formatted with black
 """
