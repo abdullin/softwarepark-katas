@@ -1,3 +1,6 @@
+// solving kata: https://github.com/Softwarepark/exercises/blob/master/transport-tycoon_22.md
+// Episode 2.2: Find fastest route on map
+
 import Cocoa
 
 class Leg {
