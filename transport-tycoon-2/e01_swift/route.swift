@@ -1,3 +1,6 @@
+// solving kata: https://github.com/Softwarepark/exercises/blob/master/transport-tycoon_21.md
+// Episode 2.1: Find shortest path on map
+
 import Cocoa
 
 class Leg {
